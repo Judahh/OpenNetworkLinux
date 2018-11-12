@@ -1,0 +1,332 @@
+/*
+ * Datacom PD3901 (DM4300 4GT+4GX+4XS) Device Tree Source
+ *
+ * Copyright 2017 Teracom Telematica S/A
+ *
+ */
+
+/include/ "t102xsi-pre.dtsi"
+
+/ {
+	model = "datacom,platf-T1024";
+	compatible = "datacom,platf-T1024";
+	#address-cells = <2>;
+	#size-cells = <2>;
+	interrupt-parent = <&mpic>;
+
+	aliases {
+		phy_sgmii_0 = &phy_sgmii_0;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		bman_fbpr: bman-fbpr {
+			size = <0 0x1000000>;
+			alignment = <0 0x1000000>;
+		};
+		qman_fqd: qman-fqd {
+			size = <0 0x400000>;
+			alignment = <0 0x400000>;
+		};
+		qman_pfdr: qman-pfdr {
+			size = <0 0x2000000>;
+			alignment = <0 0x2000000>;
+		};
+	};
+
+	ifc: localbus@ffe124000 {
+		reg = <0xf 0xfe124000 0 0x2000>;
+		ranges = <0 0 0xf 0xff800000 0x00010000>;
+
+		nand@0,0 {
+			compatible = "fsl,ifc-nand";
+			reg = <0x0 0x0 0x10000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				reg = <0x00000000 0x3FC00000>;
+				label = "NAND UBI Volumes Partition";
+			};
+
+			partition@3FC00000 {
+				reg = <0x3FC00000 0x00400000>;
+				label = "NAND mtdoops Partition";
+			};
+		};
+	};
+
+	memory {
+		device_type = "memory";
+	};
+
+	dcsr: dcsr@f00000000 {
+		ranges = <0x00000000 0xf 0x00000000 0x01072000>;
+	};
+
+	bportals: bman-portals@ff4000000 {
+		ranges = <0x0 0xf 0xf4000000 0x2000000>;
+	};
+
+	qportals: qman-portals@ff6000000 {
+		ranges = <0x0 0xf 0xf6000000 0x2000000>;
+	};
+
+	soc: soc@ffe000000 {
+		ranges = <0x00000000 0xf 0xfe000000 0x1000000>;
+		reg = <0xf 0xfe000000 0 0x00001000>;
+		spi@110000 {
+			flash@0 { /* NOR cpu */
+				compatible = "micron,n25q064", "jedec,spi-nor";
+				reg = <0>;
+				spi-max-frequency = <10000000>;
+				#address-cells = <1>;
+				#size-cells = <1>;
+				partition@0 {
+					/* Main bootloader firmware (1344 kB) */
+					reg = <0x0 0x150000>;
+					label = "U-Boot Firmware";
+				};
+
+				partition@150000 {
+					/* First environment partition (64 kB) */
+					reg = <0x150000 0x10000>;
+					label = "U-Boot Environment #1";
+				};
+
+				partition@160000 {
+					/* Second environment partition (64 kB) */
+					reg = <0x160000 0x10000>;
+					label = "U-Boot Environment #2";
+				};
+			};
+
+			fpga@2 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				compatible = "datacom,fpga-spi";
+				reg = <2>; /* chip-select */
+				spi-max-frequency = <5000000>; /* input clock */
+
+				fpga-debug@0 {
+					compatible = "datacom,fpga-dev";
+					reg = <0x00 0x1000>;
+				};
+
+				fpga-global@10 {
+					compatible = "datacom,fpga-dev";
+					reg = <0x10 0x10>;
+				};
+
+				fpga-fan@20 {
+					compatible = "datacom,fpga-dev";
+					reg = <0x020 0x10>;
+				};
+
+				fpga-watchdog@40 {
+					compatible = "datacom,fpga-watchdog";
+					reg = <0x040 0x10>;
+					timeout-sec = <30>;
+					gpios = <&gpio0 13 0>;  /* For ping thru GPIO1_13 */
+				};
+
+				fpga-tcv-eth@100 {
+					compatible = "datacom,fpga-dev";
+					reg = <0x100 0x10>;
+				};
+
+				fpgai2cctrleth: fpga-i2cctrl-eth@120 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					compatible = "datacom,fpga-master-i2c";
+					reg = <0x120 0x10>;
+				};
+				fpga-i2cctrl-eth-matrix@130 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					compatible = "datacom,fpga-matrix-i2c";
+					reg = <0x130 0x08>;
+					i2c-parent = <&fpgai2cctrleth>;
+					i2c@0 {
+						reg-sda = <0>;
+						reg-scl = <0>;
+					};
+					i2c@1 {
+						reg-sda = <1>;
+						reg-scl = <0>;
+					};
+					i2c@2 {
+						reg-sda = <2>;
+						reg-scl = <0>;
+					};
+					i2c@3 {
+						reg-sda = <0>;
+						reg-scl = <1>;
+					};
+					i2c@4 {
+						reg-sda = <0>;
+						reg-scl = <2>;
+					};
+					i2c@5 {
+						reg-sda = <1>;
+						reg-scl = <2>;
+					};
+					i2c@6 {
+						reg-sda = <1>;
+						reg-scl = <1>;
+					};
+					i2c@7 {
+						reg-sda = <2>;
+						reg-scl = <1>;
+					};
+				};
+
+				fpga-led@160 {
+					compatible = "datacom,fpga-dev";
+					reg = <0x0160 0x10>;
+				};
+
+			};
+
+			si5340@3 { /* FPGA SPI mux with SPIE_MUX_SEL = default 0 */
+				compatible = "rohm,dh2228fv";
+				reg = <3>;
+				spi-max-frequency = <10000000>; /* maximum input clock */
+			};
+		};
+
+		i2c@118000 {	/* I2C 1 */
+			fsl,preserve-clocking;
+			eeprom@53 { /* inventory */
+				compatible = "st-micro,24c02";
+				reg = <0x53>;
+				pagesize = <0x8>;
+			};
+			rtc@51 { /* rtc */
+				compatible = "nxp,pcf85263";
+				reg = <0x51>;
+			};
+		};
+
+		i2c@118100 {	/* I2C 2 */
+			/* No slaves attached, enabled for device node and controller
+			   cardinal coherence. */
+		};
+
+		i2c@119000 {	/* I2C 3 (no slaves attached) */
+			/* No slaves attached, enabled for device node and controller
+			   cardinal coherence. */
+		};
+
+		i2c@119100 {	/* I2C 4 */
+			fsl,preserve-clocking;
+			lm89@4d {
+				compatible = "ti,lm89";
+				reg = <0x4d>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+		};
+
+		fman@400000 {
+
+			fm1mac1: ethernet@e0000 {
+				phy-handle = <&phy_sgmii_0>;
+				phy-connection-type = "sgmii";
+				sleep = <&rcpm 0x10000000>;
+			};
+
+			fm1mac2: ethernet@e2000 {
+				status = "disabled";
+			};
+
+			fm1mac3: ethernet@e4000 {
+				status = "disabled";
+			};
+
+			fm1mac4: ethernet@e6000 {
+				status = "disabled";
+			};
+
+			mdio0: mdio@fc000 {
+				phy_sgmii_0: ethernet-phy@05 {
+					compatible = "ethernet-phy-ieee802.3-c22";
+					interrupts = <3 1 0 0>;
+					reg = <0x05>;
+				};
+			};
+		};
+
+		dying_gasp@0 {
+			compatible = "datacom,dying_gasp";
+			interrupt-parent = <&mpic>;
+			reg = <0x0>;
+			/* Triggering:
+			 *   1 - edge rising
+			 *   2 - edge falling
+			 *   4 - level active high
+			 *   8 - level active low
+			 */
+			interrupts = <0 2 0 0>; /* Monitor IRQ0, edge falling */
+		};
+	};
+
+	pci0: pcie@ffe240000 {
+		reg = <0xf 0xfe240000 0 0x10000>;
+		ranges = <0x02000000 0 0x80000000 0xc 0x00000000 0 0x80000000
+			  0x01000000 0 0x00000000 0xf 0xf8000000 0 0x00100000>;
+		status = "disabled";
+		pcie@0 {
+			ranges = <0x02000000 0 0xe0000000
+				  0x02000000 0 0xe0000000
+				  0 0x10000000
+
+				  0x01000000 0 0x00000000
+				  0x01000000 0 0x00000000
+				  0 0x00010000>;
+		};
+	};
+
+	pci1: pcie@ffe250000 {
+		reg = <0xf 0xfe250000 0 0x10000>;
+		ranges = <0x02000000 0 0x80000000 0xc 0x80000000 0 0x80000000
+			  0x01000000 0 0x00000000 0xf 0xf8100000 0 0x00100000>;
+		pcie@0 {
+			ranges = <0x02000000 0 0xe0000000
+				  0x02000000 0 0xe0000000
+				  0 0x10000000
+
+				  0x01000000 0 0x00000000
+				  0x01000000 0 0x00000000
+				  0 0x00010000>;
+		};
+	};
+
+	pci2: pcie@ffe260000 {
+		reg = <0xf 0xfe260000 0 0x10000>;
+		ranges = <0x02000000 0 0x80000000 0xd 0x00000000 0 0x80000000
+			  0x01000000 0 0x00000000 0xf 0xf8200000 0 0x00100000>;
+		status = "disabled";
+		pcie@0 {
+			ranges = <0x02000000 0 0xe0000000
+				  0x02000000 0 0xe0000000
+				  0 0x10000000
+
+				  0x01000000 0 0x00000000
+				  0x01000000 0 0x00000000
+				  0 0x00010000>;
+		};
+	};
+
+};
+
+/include/ "t1024si-post.dtsi"
+
+&soc {
+	usb@211000 {
+		dr_mode = "peripheral";
+	};
+};

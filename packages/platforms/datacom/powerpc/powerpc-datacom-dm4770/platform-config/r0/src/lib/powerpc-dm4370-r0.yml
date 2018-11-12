@@ -1,0 +1,40 @@
+---
+
+######################################################################
+#
+# platform-config for dm4370
+#
+######################################################################
+
+powerpc-dm4370-r0:
+
+  flat_image_tree:
+    kernel:
+      <<: *e500mc-kernel
+    dtb:
+      =: powerpc-dm4370-r0.dtb
+      package: onl-platform-build-powerpc-dm4370-r0:powerpc
+
+  loader:
+    device: /dev/mtdblock1
+    nos_bootcmds: *usb_bootcmds
+
+  environment:
+    - device: /dev/mtdblock4
+      env_offset: 0x00000000
+      env_size: 0x00010000
+      sector_size: 0x00100000
+
+  installer:
+    - ONL-BOOT:
+        =: 128MiB
+        format: ubifs
+    - ONL-CONFIG:
+        =: 128MiB
+        format: ubifs
+    - ONL-IMAGES:
+        =: 512MiB
+        format: ubifs
+    # - ONL-DATA:
+    #     =: 100%
+    #     format: ubifs
