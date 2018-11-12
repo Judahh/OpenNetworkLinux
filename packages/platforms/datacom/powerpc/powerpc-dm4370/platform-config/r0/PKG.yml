@@ -1,0 +1,1 @@
+!include $ONL_TEMPLATES/platform-config-platform.yml ARCH=powerpc VENDOR=datacom BASENAME=powerpc-dm4370 REVISION=r0

@@ -1,1 +1,0 @@
-!include $ONL_TEMPLATES/onlp-platform-any.yml PLATFORM=powerpc-datacom-dm4370 ARCH=powerpc TOOLCHAIN=powerpc-linux-gnu

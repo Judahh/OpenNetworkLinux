@@ -2,7 +2,6 @@
 
 from onl.platform.base import *
 
-class OnlPlatformCelestica(OnlPlatformBase):
-    MANUFACTUTER='DATACOM'
-    PRIVATE_ENTERPRISE_NUMBER=3709
-
+class OnlPlatformDatacom(OnlPlatformBase):
+    MANUFACTURER='Datacom'
+    PRIVATE_ENTERPRISE_NUMBER=60000

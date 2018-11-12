@@ -1,1 +1,1 @@
-!include $ONL_TEMPLATES/platform-config-vendor.yml VENDOR=datacom Vendor=DATACOM
+!include $ONL_TEMPLATES/platform-config-vendor.yml VENDOR=datacom Vendor=Datacom
